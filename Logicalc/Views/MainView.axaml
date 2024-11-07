@@ -1,0 +1,137 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Logicalc.ViewModels"
+             xmlns:xm="clr-namespace:AvaloniaMath.Controls;assembly=AvaloniaMath"
+             xmlns:app="clr-namespace:Logicalc"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="850"
+             x:Class="Logicalc.Views.MainView"
+             x:DataType="vm:MainViewModel">
+	<UserControl.Styles>
+		<Style Selector="Button, RepeatButton, ToggleButton, TextBox, ComboBox">
+			<Setter Property="Background" Value="#1A1A1A"/>
+			<Setter Property="FontWeight" Value="Medium"/>
+			<Setter Property="CornerRadius" Value="18"/>
+			<Setter Property="Padding" Value="12 9 12 7"/>
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Duration="0:0:0.2" Property="Opacity"/>
+					<BrushTransition Duration="0:0:0.2" Property="Background"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="TextBlock">
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Duration="0:0:0.1" Property="Opacity"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="ScrollBar[IsExpanded=true]">
+			<Style Selector="^ /template/ Rectangle#TrackRect">
+				<Setter Property="RadiusX" Value="8" />
+				<Setter Property="RadiusY" Value="8" />
+			</Style>
+			<Style Selector="^ /template/ Thumb">
+				<Setter Property="CornerRadius" Value="8"/>
+			</Style>
+		</Style>
+		<Style Selector="ComboBox /template/ Border#PopupBorder">
+			<Setter Property="CornerRadius" Value="20"/>
+		</Style>
+		<Style Selector="ToolTip, ContextMenu">
+			<Setter Property="FontWeight" Value="SemiLight"/>
+      <Setter Property="Padding" Value="-3"/>
+			<Setter Property="FontFamily" Value="{StaticResource Overpass}"/>
+			<Setter Property="CornerRadius" Value="20"/>
+			<Setter Property="BorderThickness" Value="3"/>
+			<Setter Property="BorderBrush" Value="#151515"/>
+			<Setter Property="Background" Value="#111"/>
+		</Style>
+    <Style Selector="ToolTip">
+      <Setter Property="Padding" Value="10 5 10 3"/>
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Margin" Value="4 0"/>
+      <Setter Property="Padding" Value="8 5 8 2"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+		<Style Selector="Button.high">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Background">
+				<Setter.Value>
+					<RadialGradientBrush GradientOrigin="0.5 1" Radius="1"
+										 Center="0.5 1">
+						<RadialGradientBrush.GradientStops>
+							<GradientStop Color="#2A49FF" Offset="0"/>
+							<GradientStop Color="#00ADFF" Offset="1"/>
+						</RadialGradientBrush.GradientStops>
+					</RadialGradientBrush>
+				</Setter.Value>
+			</Setter>
+		</Style>
+		<Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter, ToggleButton /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Duration="0:0:0.2" Property="Background"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="Border">
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Duration="0:0:0.25" Property="Opacity"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#2E2E2E"/>
+		</Style>
+		<Style Selector="Button.high:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Background">
+				<Setter.Value>
+					<RadialGradientBrush GradientOrigin="0.5 1" Radius="1"
+										 Center="0.5 1">
+						<RadialGradientBrush.GradientStops>
+							<GradientStop Color="#6480FF" Offset="0"/>
+							<GradientStop Color="#2DBCFF" Offset="1"/>
+						</RadialGradientBrush.GradientStops>
+					</RadialGradientBrush>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</UserControl.Styles>
+
+	<StackPanel Orientation="Vertical" MinWidth="325" HorizontalAlignment="Stretch" Spacing="10" Margin="22">
+		<TextBlock x:Name="TbSubtitle" Text="Schimbări de bază" FontWeight="ExtraBold" FontSize="24"></TextBlock>
+    <Grid x:Name="FormulaGrid" ColumnDefinitions="*, auto, auto, *" Height="35">
+			<TextBlock FontWeight="Bold" Grid.Column="1" FontSize="20" HorizontalAlignment="Center" Margin="0" x:Name="Formula"></TextBlock>
+      <TextBlock FontWeight="Light" Grid.Column="2" FontSize="14" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="1 0 0 9" x:Name="FormulaBase"></TextBlock>
+    </Grid>
+		<TextBox Text="32768" Watermark="Valoare" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
+    <Grid ColumnDefinitions="*, auto, *" HorizontalAlignment="Stretch">
+      <TextBox Grid.Column="0" TextChanged="TbEquation_TextChanged" Text="2" Watermark="Bază originală" x:Name="TbBaseOld"></TextBox>
+      <TextBlock Grid.Column="1" Margin="10 0 10 0" VerticalAlignment="Center">→</TextBlock>
+			<TextBox Grid.Column="2" Text="10" Watermark="Bază nouă" x:Name="TbBaseNew"></TextBox>
+    </Grid>
+		<ComboBox Padding="12 2 12 -2" x:Name="CbType" HorizontalAlignment="Stretch"></ComboBox>
+		<ScrollViewer MinHeight="70" MaxHeight="165">
+			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+				<xm:FormulaBlock HorizontalAlignment="Center" Padding="0 0 0 8" x:Name="FormulaFeedback"></xm:FormulaBlock>
+			</StackPanel>
+		</ScrollViewer>
+		<Grid ColumnDefinitions="*, auto" HorizontalAlignment="Stretch">
+      <Button Click="Calc_Click" Classes="high" Content="Calculează" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
+			<ToggleButton x:Name="CkShowSolve" ToolTip.Tip="Soluție vizibilă" IsChecked="True" Padding="8" Grid.Column="1" Margin="3 0 0 0" Width="33" Height="33" CornerRadius="28" HorizontalContentAlignment="Center">
+				<Viewbox>
+					<Path Height="470" Width="570" Fill="White" Data="M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z">
+					</Path>
+				</Viewbox>
+			</ToggleButton>
+		</Grid>
+    <TextBlock x:Name="TbCopyright" Text="© 2024 Pîrvulescu Șerban" TextAlignment="Center" TextWrapping="Wrap" Margin="0 15" HorizontalAlignment="Center"/>
+	</StackPanel>
+</UserControl>

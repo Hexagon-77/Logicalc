@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Logicalc.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:Logicalc.Views" Width="460" Height="650"
+        mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="450"
+        x:Class="Logicalc.Views.MainWindow" ExtendClientAreaToDecorationsHint="True"
+        Icon="/Assets/logo.ico" Closing="Main_Closing" FontFamily="{StaticResource Overpass}"
+        Title="Logicalc">
+	<DockPanel>
+		<StackPanel Background="#1A1A1A" IsHitTestVisible="False" DockPanel.Dock="Top" Orientation="Horizontal">
+			<Image Source="/Assets/logo.png" Height="18" Width="18" Margin="6"></Image>
+			<TextBlock VerticalAlignment="Center" Margin="0 4 0 0" FontWeight="Thin" FontSize="16" Text="Logicalc"></TextBlock>
+		</StackPanel>
+        <views:MainView />
+	</DockPanel>
+</Window>
