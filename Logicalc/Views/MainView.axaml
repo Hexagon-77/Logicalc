@@ -113,15 +113,13 @@
     </Grid>
 		<TextBox Text="32768" Watermark="Valoare" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
     <Grid ColumnDefinitions="*, auto, *" HorizontalAlignment="Stretch">
-      <TextBox Grid.Column="0" TextChanged="TbEquation_TextChanged" Text="2" Watermark="Bază originală" x:Name="TbBaseOld"></TextBox>
+      <TextBox Grid.Column="0" TextChanged="TbEquation_TextChanged" Text="10" Watermark="Bază originală" x:Name="TbBaseOld"></TextBox>
       <TextBlock Grid.Column="1" Margin="10 0 10 0" VerticalAlignment="Center">→</TextBlock>
-			<TextBox Grid.Column="2" Text="10" Watermark="Bază nouă" x:Name="TbBaseNew"></TextBox>
+			<TextBox Grid.Column="2" Text="2" Watermark="Bază nouă" x:Name="TbBaseNew"></TextBox>
     </Grid>
 		<ComboBox Padding="12 2 12 -2" x:Name="CbType" HorizontalAlignment="Stretch"></ComboBox>
-		<ScrollViewer MinHeight="70" MaxHeight="165">
-			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-				<xm:FormulaBlock HorizontalAlignment="Center" Padding="0 0 0 8" x:Name="FormulaFeedback"></xm:FormulaBlock>
-			</StackPanel>
+		<ScrollViewer MinHeight="70" MaxHeight="265">
+				<TextBlock HorizontalAlignment="Center" Padding="0 0 0 8" x:Name="FormulaFeedback"></TextBlock>
 		</ScrollViewer>
 		<Grid ColumnDefinitions="*, auto" HorizontalAlignment="Stretch">
       <Button Click="Calc_Click" Classes="high" Content="Calculează" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
