@@ -14,7 +14,7 @@ De asemenea, utilizatorul poate opta pentru afișarea detaliată a pașilor de c
 
 ---
 
-### 2. Diagrama de apel a subalgoritmilor (1p)
+## Diagrama de apel a subalgoritmilor
 
 ```cs
 Calc_Click()
@@ -30,7 +30,7 @@ Calc_Click()
 
 ---
 
-### 3. Specificarea tipurilor de date folosite (1p)
+## Specificarea tipurilor de date folosite
 
 - `string` - pentru stocarea numerelor convertite
 - `int` - pentru valorile numerice utilizate în calcule
@@ -40,7 +40,7 @@ Calc_Click()
 
 ---
 
-### 4. Subalgoritmii principali (3p)
+## Subalgoritmii principali
 
 #### a) Date, rezultate, precondiții, postcondiții (1p)
 
