@@ -78,13 +78,52 @@ namespace Logicalc.Views
         private void Calc2_Click(object sender, RoutedEventArgs e)
         {
             CalculationType calculationType = ((CalculationType?)CbType2.SelectedItem) ?? CalculationType.Adunare;
-            bool solutionVisible = CkShowSolve.IsChecked ?? false;
+            bool solutionVisible = CkShowSolve2.IsChecked ?? false;
 
-            string inputVal = TbNumber1.Text;
-            string inputVal2 = TbNumber2.Text;
+            string inputVal = TbNumber1.Text.ToUpper();
+            string inputVal2 = TbNumber2.Text.ToUpper();
+            int baseVal = int.Parse(TbBase1.Text);
             string result = "Eroare.";
             string steps = string.Empty;
-            
+
+            try
+            {
+                switch (calculationType)
+                {
+                    case CalculationType.Adunare:
+                        result = AddInBase(inputVal, inputVal2, baseVal, out steps);
+                        break;
+                    case CalculationType.Scădere:
+                        result = SubtractInBase(inputVal, inputVal2, baseVal, out steps);
+                        break;
+                    case CalculationType.Înmulțire:
+                        if (inputVal2.Length > 1)
+                            throw new ArgumentException("Al doilea număr trebuie să fie o singură cifră pentru înmulțire");
+                        result = MultiplyInBase(inputVal, inputVal2[0], baseVal, out steps);
+                        break;
+                    case CalculationType.Împărțire:
+                        if (inputVal2.Length > 1)
+                            throw new ArgumentException("Al doilea număr trebuie să fie o singură cifră pentru împărțire");
+                        if (inputVal2 == "0")
+                            throw new DivideByZeroException("Împărțirea la zero nu este permisă");
+                        result = DivideInBase(inputVal, inputVal2[0], baseVal, out steps);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                steps = $"Eroare: {ex.Message}";
+                result = "Eroare";
+            }
+
+            if (solutionVisible)
+            {
+                FormulaFeedback2.Text = $"→ Soluție\n{steps}\n→ Rezultat {result}";
+            }
+            else
+            {
+                FormulaFeedback2.Text = result;
+            }
         }
 
         string StringInBase(BigInteger value, int toBase)
@@ -200,7 +239,7 @@ namespace Logicalc.Views
         {
             if (c >= '0' && c <= '9')
                 return c - '0';
-            if (c >= 'A' && c <= 'F')
+            if (c >= 'A' && c <= 'Z')
                 return c - 'A' + 10;
             throw new ArgumentException($"Caracter invalid: {c}");
         }
@@ -227,6 +266,162 @@ namespace Logicalc.Views
                 FormulaBase.Opacity = 1;
             }
             catch { }
+        }
+
+        private string AddInBase(string num1, string num2, int baseVal, out string steps)
+        {
+            steps = $"Adunare în baza {baseVal}:\n\n";
+            steps += $"  {num1}\n+ {num2}\n";
+            steps += "  " + new string('-', Math.Max(num1.Length, num2.Length) + 1) + "\n";
+
+            // Pad the shorter number with zeros
+            int maxLength = Math.Max(num1.Length, num2.Length);
+            num1 = num1.PadLeft(maxLength, '0');
+            num2 = num2.PadLeft(maxLength, '0');
+
+            string result = "";
+            int carry = 0;
+
+            for (int i = maxLength - 1; i >= 0; i--)
+            {
+                int digit1 = GetDigitValue(num1[i]);
+                int digit2 = GetDigitValue(num2[i]);
+                
+                int sum = digit1 + digit2 + carry;
+                carry = sum / baseVal;
+                int remainder = sum % baseVal;
+
+                if (carry > 0)
+                {
+                    steps += $"  {digit1} + {digit2} + transport {carry} = {sum}, scriem {GetDigitChar(remainder)} și transportăm {carry}\n";
+                }
+                else
+                {
+                    steps += $"  {digit1} + {digit2} = {sum}, scriem {GetDigitChar(remainder)}\n";
+                }
+
+                result = GetDigitChar(remainder) + result;
+            }
+
+            if (carry > 0)
+            {
+                result = GetDigitChar(carry) + result;
+                steps += $"  Transport final {carry}\n";
+            }
+
+            return result;
+        }
+
+        private string SubtractInBase(string num1, string num2, int baseVal, out string steps)
+        {
+            steps = $"Scădere în baza {baseVal}:\n\n";
+            steps += $"  {num1}\n- {num2}\n";
+            steps += "  " + new string('-', Math.Max(num1.Length, num2.Length) + 1) + "\n";
+
+            int maxLength = Math.Max(num1.Length, num2.Length);
+            num1 = num1.PadLeft(maxLength, '0');
+            num2 = num2.PadLeft(maxLength, '0');
+
+            string result = "";
+            int borrow = 0;
+
+            for (int i = maxLength - 1; i >= 0; i--)
+            {
+                int digit1 = GetDigitValue(num1[i]);
+                int digit2 = GetDigitValue(num2[i]);
+
+                digit1 = digit1 - borrow;
+                if (digit1 < digit2)
+                {
+                    digit1 += baseVal;
+                    borrow = 1;
+                    steps += $"  {GetDigitChar(GetDigitValue(num1[i]))} - {digit2} (împrumut {baseVal}) = {digit1 - digit2}\n";
+                }
+                else
+                {
+                    borrow = 0;
+                    steps += $"  {digit1} - {digit2} = {digit1 - digit2}\n";
+                }
+
+                result = GetDigitChar(digit1 - digit2) + result;
+            }
+
+            // Remove leading zeros
+            result = result.TrimStart('0');
+            if (result == "") result = "0";
+
+            return result;
+        }
+
+        private string MultiplyInBase(string num1, char digit2, int baseVal, out string steps)
+        {
+            steps = $"Înmulțire în baza {baseVal}:\n\n";
+            steps += $"  {num1}\n× {digit2}\n";
+            steps += "  " + new string('-', num1.Length + 1) + "\n";
+
+            int multiplier = GetDigitValue(digit2);
+            string result = "";
+            int carry = 0;
+
+            for (int i = num1.Length - 1; i >= 0; i--)
+            {
+                int digit1 = GetDigitValue(num1[i]);
+                int product = digit1 * multiplier + carry;
+                carry = product / baseVal;
+                int remainder = product % baseVal;
+
+                if (carry > 0)
+                {
+                    steps += $"  {digit1} × {multiplier} + transport {carry} = {product}, scriem {GetDigitChar(remainder)} și transportăm {carry}\n";
+                }
+                else
+                {
+                    steps += $"  {digit1} × {multiplier} = {product}, scriem {GetDigitChar(remainder)}\n";
+                }
+
+                result = GetDigitChar(remainder) + result;
+            }
+
+            if (carry > 0)
+            {
+                result = GetDigitChar(carry) + result;
+                steps += $"  Transport final {carry}\n";
+            }
+
+            return result;
+        }
+
+        private string DivideInBase(string num1, char digit2, int baseVal, out string steps)
+        {
+            steps = $"Împărțire în baza {baseVal}:\n\n";
+            int divisor = GetDigitValue(digit2);
+            steps += $"  {num1} ÷ {digit2}\n";
+            steps += "  " + new string('-', num1.Length + 1) + "\n";
+
+            string result = "";
+            int remainder = 0;
+
+            for (int i = 0; i < num1.Length; i++)
+            {
+                int currentDigit = GetDigitValue(num1[i]);
+                int current = remainder * baseVal + currentDigit;
+                int quotientDigit = current / divisor;
+                remainder = current % divisor;
+
+                steps += $"  ({remainder} × {baseVal} + {currentDigit}) ÷ {divisor} = {quotientDigit}, rest {remainder}\n";
+                result += GetDigitChar(quotientDigit);
+            }
+
+            // Remove leading zeros
+            result = result.TrimStart('0');
+            if (result == "") result = "0";
+
+            if (remainder > 0)
+            {
+                steps += $"\n  Rest final: {remainder}\n";
+            }
+
+            return result;
         }
     }
 
