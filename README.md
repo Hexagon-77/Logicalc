@@ -1,119 +1,262 @@
-# Documentație Logicalc - Conversie de baze numerice
+# Logicalc - Calculator pentru conversii și operații în diverse baze numerice
 
 **Autor:** Pîrvulescu Șerban
 
----
+## I. Enunțul problemei
 
-## Enunțul problemei
-Se cere realizarea unei aplicații care să efectueze conversia unui număr dintr-o bază numerică în alta. Utilizatorul introduce numărul, baza inițială și baza finală, iar programul returnează rezultatul conversiei folosind una dintre următoarele metode:
-- Conversie prin împărțiri succesive
-- Conversie prin bază intermediară (baza 10)
-- Conversie rapidă pentru baze puteri ale lui 2
+Dezvoltarea unei aplicații desktop pentru efectuarea conversiilor între baze numerice și realizarea operațiilor aritmetice în diverse baze de numerație. Aplicația trebuie să ofere o interfață intuitivă și să prezinte pașii detaliați ai calculelor pentru scopuri educaționale.
 
-De asemenea, utilizatorul poate opta pentru afișarea detaliată a pașilor de conversie prin intermediul pictogramei cu ochi.
+Aplicația va fi compusă din 2 module:
+- Conversii între baze numerice
+    - Conversie prin împărțiri succesive
+    - Conversie prin bază intermediară (baza 10)
+    - Conversie rapidă
+- Operații aritmetice în baze diferite
+    - Adunare în orice bază
+    - Scădere în orice bază
+    - Înmulțire cu o cifră în orice bază
+    - Împărțire cu o cifră în orice bază
 
----
-
-## Diagrama de apel a subalgoritmilor
-
-```cs
-Calc_Click()
-|
-|-> SuccessiveDivision()     // daca metoda aleasa este "împărțiri"
-|-> IntermediaryConversion() // daca metoda aleasa este "intermediar"
-|     |
-|     |-> ConvertToDecimal()
-|     |-> SuccessiveDivision()
-|
-|-> RapidConversion()        // daca metoda aleasa este "rapid"
-```
+Din punct de vedere arhitectural, aplicația este dezvoltată în `.NET/C#` folosind framework-ul `Avalonia`.
+Numerele pot fi arbitrar de mari, deoarece se lucrează cu numere mari `BigInteger`.
 
 ---
 
-## Specificarea tipurilor de date folosite
+Concret, utilizatorul va introduce numerele într-o casetă de text (`TextBox`), apoi va introduce baza sursă și baza finală în 2 casete de text (`TextBox`).
+O casetă de alegeri (`ComboBox`) va permite alegerea metodei de conversie, una din cele 3 menționate mai sus.
+Butonul 'Calculează' va lansa subalgoritmii pentru efectuarea calculelor. Opțional, se pot afișa și pașii efectuați prin comutatorul (`ToggleButton`) 'Afișează pași'.
 
-- `string` - pentru stocarea numerelor convertite
-- `int` - pentru valorile numerice utilizate în calcule
-- `bool` - pentru verificarea vizibilității soluției
-- `enum` - `BaseConversionType` pentru alegerea metodei de conversie
-- `List<(string, int)>` - pentru stocarea soluțiilor anterioare
+Pentru modulul de operații aritmetice, utilizatorul va introduce numărul, baza și tipul de operație în 3 casete de text (`TextBox`), iar butonul 'Calculează' va lansa subalgoritmii pentru efectuarea calculelor. Opțional, se pot afișa și pașii efectuați prin comutatorul (`ToggleButton`) 'Afișează pași'.
 
----
+### Diagrama de apel a subalgoritmilor
 
-## Subalgoritmii principali
-
-#### a) Date, rezultate, precondiții, postcondiții (1p)
-
-**SuccessiveDivision(value, newBase, out steps)**
-- *Date de intrare:* `value` - număr întreg pozitiv, `newBase` - baza țintă
-- *Rezultate:* `string` - numărul convertit în noua bază
-- *Condiții:* `value > 0`, `newBase > 1`
-
-**IntermediaryConversion(value, oldBase, newBase, out steps)**
-- *Date de intrare:* `value` - număr în baza `oldBase`, `newBase` - baza țintă
-- *Rezultate:* `string` - numărul convertit în `newBase`
-- *Condiții:* `value` trebuie să fie un număr valid în `oldBase`
-
-**RapidConversion(value, oldBase, newBase, out steps)**
-- *Date de intrare:* `value` - număr în `oldBase`, `oldBase` și `newBase` puteri ale lui 2
-- *Rezultate:* `string` - conversia în `newBase`
-- *Condiții:* `oldBase` și `newBase` sunt puteri ale lui 2, `oldBase < newBase`
-
----
-
-## Pseudocod
-
-**SuccessiveDivision(value, newBase, out steps)**
-```
-steps <- ""
-result <- ""
-Cât timp value > 0:
-    remainder = value % newBase
-    Adaugă remainder la începutul lui result
-    Salvează pașii calculului în steps
-    value <- value / newBase
-Returnează -> result și steps
+```mermaid
+graph TD
+    A[MainView] --> B[Conversii - Calc_Click]
+    A --> C[Operații - Calc2_Click]
+    B --> D[SuccessiveDivision]
+    B --> E[IntermediaryConversion]
+    B --> F[RapidConversion]
+    E --> G[ConvertToDecimal]
+    C --> H[AddInBase]
+    C --> I[SubtractInBase]
+    C --> J[MultiplyInBase]
+    C --> K[DivideInBase]
 ```
 
-**IntermediaryConversion(value, oldBase, newBase, out steps)**
+### Specificarea tipurilor de date folosite
+
+1. **Tipuri de date fundamentale:**
+   - `string` - pentru reprezentarea numerelor în diverse baze
+   - `BigInteger` - pentru operații cu numere mari
+   - `int` - pentru baze și calcule intermediare
+   - `char` - pentru cifre individuale
+   - `bool` - pentru stări și validări
+
+2. **Tipuri enumerate:**
+   ```csharp
+   enum BaseConversionType {
+       Împărțiri,
+       Intermediar,
+       Rapid
+   }
+
+   enum CalculationType {
+       Adunare,
+       Scădere,
+       Înmulțire,
+       Împărțire
+   }
+   ```
+
+3. **Structuri auxiliare:**
+   - `(string, int)` - tupluri pentru stocarea rezultatelor și bazelor
+
+### Subalgoritmii principali
+
+#### 1. Conversii între baze
+
+**ConvertToDecimal(value, baseFrom)**
 ```
-Convertește value în baza 10 folosind ConvertToDecimal
-Salvează pașii în steps
-Apelează SuccessiveDivision pentru conversia din baza 10 în newBase
-Returnează -> rezultatul și pașii
+Intrare: value (string) - numărul de convertit
+        baseFrom (int) - baza sursă
+Ieșire: result (BigInteger) - valoarea în baza 10
+        steps (string) - pașii conversiei
+
+result ← 0
+Pentru fiecare cifră c din value:
+    digit ← GetDigitValue(c)
+    Validează digit < baseFrom
+    result ← result × baseFrom + digit
+    Adaugă pas în steps
+Returnează result, steps
 ```
 
-**RapidConversion(val, oldBase, newBase, out steps)**
+**SuccessiveDivision(value, newBase)**
 ```
-Calculează stepValue <- conversia lui value din oldBase în baza 10
-Determină groupSize <- log2(newBase) - log2(oldBase) + 1
-Cât timp stepValue > 0:
-    Împarte în grupuri conform groupSize
-    Stochează rezultatul în steps
-Returnează -> numărul convertit
+Intrare: value (string) - numărul în baza 10
+        newBase (int) - baza țintă
+Ieșire: result (string) - numărul convertit
+        steps (string) - pașii conversiei
+
+result ← ""
+number ← Parse(value)
+Cât timp number > 0:
+    remainder ← number mod newBase
+    result ← GetDigitChar(remainder) + result
+    Adaugă pas în steps
+    number ← number ÷ newBase
+Returnează result, steps
 ```
 
----
+#### 2. Operații aritmetice
 
-## Date de test
+**AddInBase(num1, num2, baseVal)**
+```
+Intrare: num1, num2 (string) - numerele de adunat
+        baseVal (int) - baza de calcul
+Ieșire: result (string) - suma
+        steps (string) - pașii calculului
 
+Alinează numerele la dreapta
+carry ← 0
+result ← ""
 
-#### Conversie prin împărțiri succesive
-| Input       | Rezultat       |
-|------------|-------------|
-| 25 (baza 10) → baza 2 | 11001 |
-| 100 (baza 10) → baza 8 | 144 |
+Pentru i de la Length-1 până la 0:
+    d1 ← GetDigitValue(num1[i])
+    d2 ← GetDigitValue(num2[i])
+    sum ← d1 + d2 + carry
+    carry ← sum ÷ baseVal
+    digit ← sum mod baseVal
+    result ← GetDigitChar(digit) + result
+    Adaugă pas în steps
 
-#### Conversie prin bază intermediară
-| Input       | Rezultat       |
-|------------|-------------|
-| 1010 (baza 2) → baza 16 | A |
-| 77 (baza 8) → baza 2 | 111111 |
+Dacă carry > 0:
+    result ← GetDigitChar(carry) + result
+Returnează result, steps
+```
 
-#### Conversie rapidă
-| Input       | Rezultat       |
-|------------|-------------|
-| 1101 (baza 2) → baza 8 | 15 |
-| F (baza 16) → baza 2 | 1111 |
+**MultiplyInBase(num1, digit2, baseVal)**
+```
+Intrare: num1 (string) - primul număr
+        digit2 (char) - cifra cu care se înmulțește
+        baseVal (int) - baza de calcul
+Ieșire: result (string) - produsul
+        steps (string) - pașii calculului
+
+multiplier ← GetDigitValue(digit2)
+carry ← 0
+result ← ""
+
+Pentru i de la Length-1 până la 0:
+    d1 ← GetDigitValue(num1[i])
+    prod ← d1 × multiplier + carry
+    carry ← prod ÷ baseVal
+    digit ← prod mod baseVal
+    result ← GetDigitChar(digit) + result
+    Adaugă pas în steps
+
+Dacă carry > 0:
+    result ← GetDigitChar(carry) + result
+Returnează result, steps
+```
+
+## II. Listă de funcționalități
+
+### A. Conversii între baze numerice
+1. Conversie prin împărțiri succesive
+2. Conversie prin bază intermediară (baza 10)
+3. Conversie rapidă
+4. Afișarea pașilor de conversie
+5. Suport pentru baze între 2 și 36
+
+### B. Operații aritmetice în baze diferite
+1. Adunare în orice bază
+2. Scădere în orice bază
+3. Înmulțire cu o cifră
+4. Împărțire cu o cifră
+5. Afișarea pașilor de calcul
+
+## III. Planul de iterații
+
+### Iterația 1: Conversii între baze
+- [x] Implementarea algoritmilor de conversie
+- [x] Crearea interfeței pentru conversii
+- [x] Adăugarea funcționalității de afișare a pașilor
+- [x] Validarea datelor de intrare
+
+### Iterația 2: Operații aritmetice
+- [x] Implementarea operațiilor de bază
+- [x] Crearea interfeței pentru calcule
+- [x] Adăugarea funcționalității de afișare a pașilor
+- [x] Gestionarea erorilor și validări
+
+### Iterația 3: Îmbunătățiri UI/UX
+- [x] Design modern cu gradienți
+- [x] Tranziții animate
+- [x] Interfață responsivă
+- [x] Feedback vizual pentru utilizatori
+
+## IV. Scenarii de rulare
+
+### 1. Conversie între baze
+```
+Input: 32768 (baza 10) → baza 2
+Metodă: Împărțiri succesive
+Rezultat: 1000000000000000
+Pași vizibili: Nu
+```
+
+### 2. Adunare în baza 2
+```
+Input: 1010 + 1011 (baza 2)
+Rezultat:
+1010
++ 1011
+------
+0 + 1 = 1, scriem 1
+1 + 1 = 0, scriem 0 și transportăm 1
+0 + 0 + transport 1 = 1, scriem 1
+1 + 1 = 2, scriem 0 și transportăm 1
+Transport final 1
+Rezultat 10101
+Pași vizibili: Da
+```
+
+### 3. Înmulțire în baza 16
+```
+Input: ABC × 5 (baza 16)
+Rezultat: 35BE
+Pași vizibili: Nu
+```
+
+## V. Lista de activități
+
+### A. Dezvoltare
+1. Implementarea algoritmilor de conversie
+   - Metoda împărțirilor succesive
+   - Metoda bazei intermediare
+   - Metoda rapidă
+2. Implementarea operațiilor aritmetice
+   - Adunare și scădere
+   - Înmulțire și împărțire cu o cifră
+3. Dezvoltarea interfeței grafice
+   - Layout-ul aplicației
+   - Componente UI
+   - Animații și tranziții
+
+### B. Testare
+1. Testarea conversiilor
+   - Validarea rezultatelor
+   - Verificarea pașilor intermediari
+2. Testarea operațiilor
+   - Verificarea calculelor
+   - Testarea cazurilor limită
+3. Testarea interfeței
+   - Verificarea responsivității
+   - Testarea feedback-ului vizual
+
+### C. Documentare
+1. Redactarea documentației tehnice
 
 

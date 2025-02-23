@@ -288,18 +288,22 @@ namespace Logicalc.Views
                 int digit2 = GetDigitValue(num2[i]);
                 
                 int sum = digit1 + digit2 + carry;
-                carry = sum / baseVal;
                 int remainder = sum % baseVal;
 
-                if (carry > 0)
+                if (sum / baseVal > 0)
                 {
-                    steps += $"  {digit1} + {digit2} + transport {carry} = {sum}, scriem {GetDigitChar(remainder)} și transportăm {carry}\n";
+                    steps += $"  {digit1} + {digit2} + transport {carry} = {sum}, scriem {GetDigitChar(remainder)} și transportăm {sum / baseVal}\n";
+                }
+                else if (carry > 0)
+                {
+                    steps += $"  {digit1} + {digit2} + transport {carry} = {sum}, scriem {GetDigitChar(remainder)}\n";
                 }
                 else
                 {
                     steps += $"  {digit1} + {digit2} = {sum}, scriem {GetDigitChar(remainder)}\n";
                 }
 
+                carry = sum / baseVal;
                 result = GetDigitChar(remainder) + result;
             }
 
@@ -367,18 +371,22 @@ namespace Logicalc.Views
             {
                 int digit1 = GetDigitValue(num1[i]);
                 int product = digit1 * multiplier + carry;
-                carry = product / baseVal;
                 int remainder = product % baseVal;
 
-                if (carry > 0)
+                if (product / baseVal > 0)
                 {
-                    steps += $"  {digit1} × {multiplier} + transport {carry} = {product}, scriem {GetDigitChar(remainder)} și transportăm {carry}\n";
+                    steps += $"  {digit1} × {multiplier} + transport {carry} = {product}, scriem {GetDigitChar(remainder)} și transportăm {product / baseVal}\n";
+                }
+                else if (carry > 0)
+                {
+                    steps += $"  {digit1} × {multiplier} + transport {carry} = {product}, scriem {GetDigitChar(remainder)}\n";
                 }
                 else
                 {
                     steps += $"  {digit1} × {multiplier} = {product}, scriem {GetDigitChar(remainder)}\n";
                 }
 
+                carry = product / baseVal;
                 result = GetDigitChar(remainder) + result;
             }
 
