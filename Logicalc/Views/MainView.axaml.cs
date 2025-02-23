@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AngouriMath.Extensions;
 using XamlMath.Utils;
+using System.Numerics;
 
 namespace Logicalc.Views
 {
@@ -26,6 +27,9 @@ namespace Logicalc.Views
 
             CbType.ItemsSource = Enum.GetValues(typeof(BaseConversionType));
             CbType.SelectedIndex = 0;
+
+            CbType2.ItemsSource = Enum.GetValues(typeof(CalculationType));
+            CbType2.SelectedIndex = 0;
         }
 
         private void Calc_Click(object sender, RoutedEventArgs e)
@@ -33,7 +37,7 @@ namespace Logicalc.Views
             BaseConversionType conversionType = ((BaseConversionType?)CbType.SelectedItem) ?? BaseConversionType.Împărțiri;
             bool solutionVisible = CkShowSolve.IsChecked ?? false;
 
-            int val = int.Parse(TbEquation.Text);
+            string inputVal = TbEquation.Text;
             int oldBase = int.Parse(TbBaseOld.Text);
             int newBase = int.Parse(TbBaseNew.Text);
             string result = "Conversie invalidă.";
@@ -44,19 +48,22 @@ namespace Logicalc.Views
                 switch (conversionType)
                 {
                     case BaseConversionType.Împărțiri:
-                        result = SuccessiveDivision(val, newBase, out steps);
+                        result = SuccessiveDivision(inputVal, oldBase, newBase, out steps);
                         break;
                     case BaseConversionType.Intermediar:
-                        result = IntermediaryConversion(val, oldBase, newBase, out steps);
+                        result = IntermediaryConversion(inputVal, oldBase, newBase, out steps);
                         break;
                     case BaseConversionType.Rapid:
-                        result = RapidConversion(val.ToString(), oldBase, newBase, out steps);
+                        result = RapidConversion(inputVal, oldBase, newBase, out steps);
                         break;
                     default:
                         break;
                 }
             }
-            catch { }
+            catch (Exception ex) 
+            {
+                steps = $"Eroare: {ex.Message}";
+            }
 
             if (solutionVisible)
             {
@@ -68,26 +75,78 @@ namespace Logicalc.Views
             }
         }
 
-        private string SuccessiveDivision(int value, int newBase, out string steps)
+        private void Calc2_Click(object sender, RoutedEventArgs e)
+        {
+            CalculationType calculationType = ((CalculationType?)CbType2.SelectedItem) ?? CalculationType.Adunare;
+            bool solutionVisible = CkShowSolve.IsChecked ?? false;
+
+            string inputVal = TbNumber1.Text;
+            string inputVal2 = TbNumber2.Text;
+            string result = "Eroare.";
+            string steps = string.Empty;
+            
+        }
+
+        string StringInBase(BigInteger value, int toBase)
+        {
+            if (toBase < 2 || toBase > 36) throw new ArgumentException("toBase");
+            if (value < 0) throw new ArgumentException("value");
+
+            if (value == 0) return "0";
+
+            string AlphaCodes = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = "";
+
+            while (value > 0)
+            {
+                retVal = AlphaCodes[(int)(value % toBase)] + retVal;
+                value /= toBase;
+            }
+
+            return retVal;
+        }
+
+        private string SuccessiveDivision(string value, int newBase, out string steps)
         {
             string result = "";
             steps = "";
-            while (value > 0)
+            BigInteger number = BigInteger.Parse(value);
+            
+            while (number > 0)
             {
-                int remainder = value % newBase;
-                steps += $"{value} / {newBase} = {value / newBase}, rest = {remainder} \n";
-                result = remainder.ToString("X") + result;
-                value /= newBase;
+                BigInteger remainder = number % newBase;
+                steps += $"{number}(10) / {newBase}(10) = {number / newBase}(10), rest = {remainder}(10) \n";
+                result = StringInBase(remainder, newBase) + result;
+                number /= newBase;
             }
+
             return result;
         }
 
-        private string IntermediaryConversion(int value, int oldBase, int newBase, out string steps)
+        private string SuccessiveDivision(string value, int oldBase, int newBase, out string steps)
+        {
+            string result = "";
+            steps = "";
+            BigInteger number = ConvertToDecimal(value, oldBase, out string _);
+            
+            while (number > 0)
+            {
+                BigInteger remainder = number % newBase;
+                steps += $"{StringInBase(number, oldBase)}({oldBase}) / {newBase}(10) = {StringInBase(number / newBase, oldBase)}({oldBase}), rest = {StringInBase(remainder, newBase)}({newBase}) \n";
+                result = StringInBase(remainder, newBase) + result;
+                number /= newBase;
+            }
+
+            return result;
+        }
+
+        private string IntermediaryConversion(string value, int oldBase, int newBase, out string steps)
         {
             steps = "";
-            int decimalValue = ConvertToDecimal(value.ToString(), oldBase, out string decimalSteps);
+            BigInteger decimalValue = ConvertToDecimal(value, oldBase, out string decimalSteps);
             steps += $"Din baza {oldBase} în baza 10:\n{decimalSteps}\n";
-            string result = SuccessiveDivision(decimalValue, newBase, out string conversionSteps);
+            string result = SuccessiveDivision(decimalValue.ToString(), newBase, out string conversionSteps);
             steps += $"Din baza 10 în baza {newBase}:\n{conversionSteps}";
             return result;
         }
@@ -97,43 +156,60 @@ namespace Logicalc.Views
             steps = "";
             steps += $"Conversie rapidă din baza {oldBase} în {newBase}:\n";
 
-            int stepValue = Convert.ToInt32(value, oldBase);
-            int groupSize = (int)Math.Log2(newBase) - (int)Math.Log2(oldBase) + 1;
-            steps += $"Grupăm {groupSize} cifre\n";
-
-            if (groupSize == 1)
+            if (oldBase == newBase)
             {
                 steps += "Bazele sunt identice.\n";
                 return value;
             }
-            else
+
+            // Convert to decimal first
+            BigInteger decimalValue = ConvertToDecimal(value, oldBase, out string _);
+            
+            // Then convert to target base
+            string result = "";
+            BigInteger currentValue = decimalValue;
+            
+            while (currentValue > 0)
             {
-                int groupCount = 1;
-
-                while (stepValue > 0)
-                {
-                    steps += $"Grup {groupCount}: {stepValue % newBase}\n";
-
-                    stepValue /= newBase;
-                    groupCount++;
-                }
+                BigInteger remainder = currentValue % newBase;
+                result = GetDigitChar((int)remainder) + result;
+                currentValue /= newBase;
+                steps += $"Pas: {currentValue} rest {remainder}\n";
             }
 
-            string result = Convert.ToString(Convert.ToInt32(value, oldBase), newBase).ToUpper();
-            return result;
+            return result.Length > 0 ? result : "0";
         }
 
-        private int ConvertToDecimal(string value, int baseFrom, out string steps)
+        private BigInteger ConvertToDecimal(string value, int baseFrom, out string steps)
         {
             steps = "";
-            int result = 0;
-            foreach (char c in value)
+            BigInteger result = 0;
+            foreach (char c in value.ToUpper())
             {
-                int digit = c >= '0' && c <= '9' ? c - '0' : c - 'A' + 10;
+                int digit = GetDigitValue(c);
+                if (digit >= baseFrom)
+                    throw new ArgumentException($"Cifra {c} nu este validă în baza {baseFrom}");
+                    
                 steps += $"{result} * {baseFrom} + {digit} = {result * baseFrom + digit}\n";
                 result = result * baseFrom + digit;
             }
             return result;
+        }
+
+        private int GetDigitValue(char c)
+        {
+            if (c >= '0' && c <= '9')
+                return c - '0';
+            if (c >= 'A' && c <= 'F')
+                return c - 'A' + 10;
+            throw new ArgumentException($"Caracter invalid: {c}");
+        }
+
+        private char GetDigitChar(int value)
+        {
+            if (value < 10)
+                return (char)('0' + value);
+            return (char)('A' + (value - 10));
         }
 
         private async void TbEquation_TextChanged(object sender, TextChangedEventArgs e)
@@ -159,5 +235,13 @@ namespace Logicalc.Views
         Împărțiri,
         Intermediar,
         Rapid
+    }
+
+    public enum CalculationType
+    {
+        Adunare,
+        Scădere,
+        Înmulțire,   // Cu o cifră
+        Împărțire,   // Cu o cifră
     }
 }
